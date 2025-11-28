@@ -23,15 +23,28 @@ public class LinearInterpolationTest {
 
             preview.setFont(new Font("Arial", Font.PLAIN, 10));
 
+            JPanel labelPanel = new JPanel();
+            labelPanel.setOpaque(false);
+            labelPanel.setLayout(new BoxLayout(labelPanel, BoxLayout.Y_AXIS));
+
             // location label
-            JLabel locationLabel = new JLabel("Location: " + String.format("%.4f", preview.currentPosition));
-            locationLabel.setAlignmentX(0f);
-            locationLabel.setAlignmentY(1f);
+            JLabel locationLabel = new JLabel("Location: " + preview.currentPosition);
+            locationLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             locationLabel.setOpaque(true);
             locationLabel.setBackground(new Color(0,0,0, 220));
             locationLabel.setForeground(Color.GREEN);
             locationLabel.setFont(new Font("Consolas", Font.BOLD, 12));
-            preview.add(locationLabel);
+            labelPanel.add(locationLabel);
+
+            JLabel tLabel = new JLabel("t: " + preview.t);
+            tLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            tLabel.setOpaque(true);
+            tLabel.setBackground(new Color(0,0,0, 220));
+            tLabel.setForeground(Color.GREEN);
+            tLabel.setFont(new Font("Consolas", Font.BOLD, 12));
+            labelPanel.add(tLabel, BorderLayout.SOUTH);
+
+            preview.add(labelPanel);
 
             JPanel controls = new JPanel();
             controls.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -58,34 +71,44 @@ public class LinearInterpolationTest {
 
             // speed
             JPanel speedRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            JSlider speedSlider = new JSlider(10, 100, 100);
+            JSlider speedSlider = new JSlider(0, 200, 100);
             speedSlider.setMajorTickSpacing(100);
             speedSlider.setMinorTickSpacing(10);
             speedSlider.setPaintTicks(true);
             speedSlider.setPaintLabels(true);
             speedSlider.setFocusable(false);
-            speedSlider.setPreferredSize(new Dimension(100, 20));
+            speedSlider.setPreferredSize(new Dimension(200, 50));
 
-            speedRow.add(new JLabel("Speed:"));
-            speedRow.add(speedSlider);
-            JLabel speedLabel = new JLabel(String.valueOf(preview.speed));
+            speedRow.add(speedSlider, BorderLayout.CENTER);
+            JLabel speedLabel = new JLabel("Speed: " + preview.speed);
             speedRow.add(speedLabel);
             controls.add(speedRow);
 
             // pairwise
             JPanel pairwiseRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            JSlider pairwiseSlider = new JSlider(10, 200, 100);
-            pairwiseSlider.setMajorTickSpacing(100);
-            pairwiseSlider.setMinorTickSpacing(10);
-            pairwiseSlider.setPaintTicks(true);
-            pairwiseSlider.setPaintLabels(true);
-            pairwiseSlider.setFocusable(false);
-            pairwiseSlider.setPreferredSize(new Dimension(200, 20));
-            pairwiseRow.add(new JLabel("Pairwise distance:"));
-            pairwiseRow.add(pairwiseSlider);
-            JLabel pairwiseLabel = new JLabel(String.valueOf(preview.pairwiseDistance));
+            JSlider stepSlider = new JSlider(10, 410, 100);
+            stepSlider.setMajorTickSpacing(100);
+            stepSlider.setMinorTickSpacing(10);
+            stepSlider.setPaintTicks(true);
+            stepSlider.setPaintLabels(true);
+            stepSlider.setFocusable(false);
+            stepSlider.setPreferredSize(new Dimension(200, 50));
+            pairwiseRow.add(stepSlider);
+            JLabel pairwiseLabel = new JLabel("Step: " + preview.step);
             pairwiseRow.add(pairwiseLabel);
             controls.add(pairwiseRow);
+
+            JPanel scaleRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            JSlider scaleSlider = new JSlider(1, 1000, 15);
+            scaleSlider.setMinorTickSpacing(1);
+            scaleSlider.setPaintTicks(true);
+            scaleSlider.setPaintLabels(true);
+            scaleSlider.setFocusable(false);
+            scaleSlider.setPreferredSize(new Dimension(200, 50));
+            scaleRow.add(scaleSlider);
+            JLabel scaleLabel = new JLabel("Scale: " + preview.scale);
+            scaleRow.add(scaleLabel);
+            controls.add(scaleRow);
 
             frame.add(preview, BorderLayout.CENTER);
             frame.add(controls, BorderLayout.SOUTH);
@@ -96,7 +119,8 @@ public class LinearInterpolationTest {
 
             new Timer(32, e -> {
                 preview.updateAnimation();
-                locationLabel.setText("Location: " + String.format("%.2f", preview.currentPosition));
+                locationLabel.setText("Location: " + preview.currentPosition);
+                tLabel.setText("t: " + preview.t);
             }).start();
 
             updatePoints.addActionListener(e -> {
@@ -119,12 +143,17 @@ public class LinearInterpolationTest {
 
             speedSlider.addChangeListener(e -> {
                 preview.speed = speedSlider.getValue() / 1000.0;
-                speedLabel.setText(String.valueOf(preview.speed));
+                speedLabel.setText("Speed: " + preview.speed);
             });
 
-            pairwiseSlider.addChangeListener(e -> {
-                preview.pairwiseDistance = pairwiseSlider.getValue() / 1000.0;
-                pairwiseLabel.setText(String.valueOf(preview.pairwiseDistance));
+            stepSlider.addChangeListener(e -> {
+                preview.step = stepSlider.getValue() / 1000.0;
+                pairwiseLabel.setText("Step: " + preview.step);
+            });
+
+            scaleSlider.addChangeListener(e -> {
+                preview.scale = scaleSlider.getValue();
+                scaleLabel.setText("Scale: " + preview.scale);
             });
         });
     }
@@ -133,9 +162,10 @@ public class LinearInterpolationTest {
         private LinearInterpolation lerp;
         double t = 0;
         double speed = 0.1;
-        double pairwiseDistance = speed;
+        double step = speed;
 
         boolean paused = false;
+        double scale = 15;
 
         double currentPosition = 0;
 
@@ -166,19 +196,19 @@ public class LinearInterpolationTest {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                     RenderingHints.VALUE_ANTIALIAS_ON);
 
-            for (Point3D p : lerp.generatePoints(pairwiseDistance)) {
-                int x = (int) (p.x() * 15);
-                int y = (int) (p.y() * 10);
+            for (Point3D p : lerp.generatePoints(step)) {
+                int x = (int) (p.x() * scale);
+                int y = (int) (p.y() * scale);
                 g2.fillRect(x, y, 1, 8);
-                g2.drawString(String.format("%.2f", p.x()), x, y + 20);
+                g2.drawString(String.valueOf(p.x()), x, y + 20);
             }
 
-            g2.drawLine(0, 8, (int) (lerp.end().x() * 15), 8);
+            g2.drawLine(0, 8, (int) (lerp.end().x() * scale), 8);
 
             Point3D moving = lerp.getPoint(t);
             g2.setColor(new Color(255,0,0,200));
-            int mx = (int) (moving.x() * 15);
-            int my = (int) (moving.y() * 10);
+            int mx = (int) (moving.x() * scale);
+            int my = (int) (moving.y() * scale);
             g2.fillRect(mx, my, 3, 10);
 
             this.currentPosition = moving.x();
