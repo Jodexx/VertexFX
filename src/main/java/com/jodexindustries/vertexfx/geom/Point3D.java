@@ -201,11 +201,21 @@ public record Point3D(double x, double y, double z) {
      * @return the interpolated point
      */
     @Contract("_, _ -> new")
-    public @NotNull Point3D lerp(Point3D o, double t) {
+    public @NotNull Point3D lerp(@NotNull Point3D o, double t) {
         return new Point3D(
                 x + (o.x - x) * t,
                 y + (o.y - y) * t,
                 z + (o.z - z) * t
+        );
+    }
+
+    @Contract("_ -> new")
+    public @NotNull Point3D round(int decimals) {
+        double factor = Math.pow(10, decimals);
+        return new Point3D(
+                Math.round(x * factor) / factor,
+                Math.round(y * factor) / factor,
+                Math.round(z * factor) / factor
         );
     }
 
