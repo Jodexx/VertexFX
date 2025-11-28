@@ -15,11 +15,9 @@ public record LinearInterpolation(Point3D start, Point3D end) {
     }
 
     public @NotNull List<Point3D> generatePoints(double step) {
-        if (step <= 0 || step > 1) throw new IllegalArgumentException("Step must be > 0 and ≤ 1, but was: " + step);
-
         List<Point3D> list = new ArrayList<>();
         for (double t = 0; t < 1; t += step) {
-            list.add(start.lerp(end, t));
+            list.add(start.lerp(end, t).round(13));
         }
 
         return list;
