@@ -7,7 +7,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public record LinearInterpolation(Point3D start, Point3D end) {
+public record LinearInterpolation(Point3D start, Point3D end, double distance) {
+
+    public LinearInterpolation(Point3D start, Point3D end) {
+        this(start, end, start.distance(end));
+    }
 
     @Contract("_ -> new")
     public @NotNull Point3D getPoint(double t) {
