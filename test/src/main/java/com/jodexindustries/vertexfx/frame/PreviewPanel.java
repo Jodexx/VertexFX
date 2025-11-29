@@ -3,7 +3,7 @@ package com.jodexindustries.vertexfx.frame;
 import javax.swing.*;
 import java.awt.*;
 
-public class PreviewPanel extends JPanel {
+public abstract class PreviewPanel extends JPanel {
 
     public double t = 0;
 
@@ -35,6 +35,17 @@ public class PreviewPanel extends JPanel {
 
         add(labelPanel);
     }
+
+    @Override
+    protected final void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        paintComponent(g2);
+    }
+
+    public abstract void paintComponent(Graphics2D g);
 
     public void updateAnimation() {
         if (!frame.paused) {
