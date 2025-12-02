@@ -30,6 +30,8 @@ public class VertexFrame extends JFrame {
 
     private PreviewPanel preview;
 
+    public JPanel stepRow;
+
     public VertexFrame() {
         super("VertexFX Preview");
 
@@ -61,7 +63,7 @@ public class VertexFrame extends JFrame {
         JSlider scaleSlider = (JSlider) scaleRow.getClientProperty("slider");
         addControls(scaleRow);
 
-        JPanel stepRow = VertexFrame.labeledSliderRow("Step:", 10, 410, 100, 200, 50, 10, 100, 0.1);
+        this.stepRow = VertexFrame.labeledSliderRow("Step:", 10, 410, 100, 200, 50, 10, 100, 0.1);
         JLabel stepLabel = (JLabel) stepRow.getClientProperty("label");
         JSlider stepSlider = (JSlider) stepRow.getClientProperty("slider");
         addControls(stepRow);
